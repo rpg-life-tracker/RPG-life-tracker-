@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Campaign">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0e0c">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%230f0e0c'/><text x='50%25' y='58%25' font-family='Georgia,serif' font-size='100' text-anchor='middle' fill='%23c9a961' font-style='italic'>90</text></svg>">
+<title>The 90-Day Campaign</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: #0f0e0c;
+  color: #d4c5a9;
+  font-family: Georgia, 'Times New Roman', serif;
+  min-height: 100vh;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background-image: radial-gradient(ellipse at top, rgba(201, 169, 97, 0.06), transparent 60%);
+}
+.root { padding: 20px 14px 60px; max-width: 720px; margin: 0 auto; }
+
+/* Header */
+.header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #3a3530; margin-bottom: 20px; }
+.crest {
+width: 38px; height: 38px; margin: 0 auto 10px;
+border: 1px solid #c9a961; background: #1a1815;
+display: flex; align-items: center; justify-content: center;
+transform: rotate(45deg);
+}
+.crest svg { transform: rotate(-45deg); }
+.title { font-size: 24px; color: #e8d9b8; font-style: italic; letter-spacing: 0.02em; margin-bottom: 4px; }
+.subtitle { font-size: 10px; color: #8a7a5c; letter-spacing: 0.3em; text-transform: uppercase; }
+
+/* Save indicator */
+.save-indicator {
+position: fixed; top: calc(env(safe-area-inset-top) + 8px); right: 12px;
+font-size: 10px; color: #7fa87f; letter-spacing: 0.2em; text-transform: uppercase;
+opacity: 0; transition: opacity 0.3s; font-style: italic;
+pointer-events: none; z-index: 100;
+}
+.save-indicator.show { opacity: 1; }
+
+/* Tabs */
+.tabs {
+display: flex; gap: 4px; margin-bottom: 24px;
+overflow-x: auto; border-bottom: 1px solid #2a2621;
+-ms-overflow-style: none; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+padding: 10px 12px; background: transparent; border: none;
+border-bottom: 2px solid transparent;
+color: #6d6553; font-family: inherit; font-size: 11px;
+letter-spacing: 0.2em; text-transform: uppercase;
+cursor: pointer; white-space: nowrap;
+}
+.tab.active { color: #e8d9b8; border-bottom: 2px solid #c9a961; }
+
+/* Banner */
+.banner {
+display: flex; gap: 16px; margin-bottom: 20px;
+padding: 16px 18px; background: #17150f;
+border: 1px solid #3a3530; align-items: center;
+}
+.level-box { text-align: center; border-right: 1px solid #3a3530; padding-right: 16px; flex-shrink: 0; }
+.level-label { font-size: 9px; letter-spacing: 0.3em; color: #8a7a5c; }
+.level-num { font-size: 28px; color: #e8d9b8; line-height: 1; }
+.banner-mid { flex: 1; min-width: 0; }
+.phase-label { font-size: 10px; letter-spacing: 0.25em; margin-bottom: 4px; }
+.phase-desc-small { font-size: 12px; color: #a89a7f; font-style: italic; margin-bottom: 10px; }
+.xp-bar { height: 4px; background: #2a2621; border: 1px solid #3a3530; width: 100%; overflow: hidden; }
+.xp-bar-fill { height: 100%; transition: width 0.3s; }
+
+/* Day nav */
+.day-nav {
+display: flex; align-items: center; justify-content: space-between;
+padding: 12px 16px; background: #17150f;
+border: 1px solid #3a3530; margin-bottom: 20px;
+}
+.day-nav-btn {
+background: transparent; border: 1px solid #3a3530;
+color: #c9a961; padding: 6px 10px; cursor: pointer;
+font-family: inherit; font-size: 14px;
+}
+.day-nav-btn:disabled { opacity: 0.3; }
+.day-nav-center { text-align: center; flex: 1; }
+.day-nav-label { font-size: 9px; letter-spacing: 0.3em; color: #8a7a5c; }
+.day-nav-num { font-size: 22px; color: #e8d9b8; }
+.day-nav-total { font-size: 13px; color: #6d6553; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 24px; }
+.stat { background: #17150f; border: 1px solid #3a3530; padding: 10px 6px; text-align: center; }
+.stat-icon { margin-bottom: 6px; display: flex; justify-content: center; }
+.stat-value { font-size: 18px; color: #e8d9b8; margin-bottom: 2px; }
+.stat-label { font-size: 8px; letter-spacing: 0.2em; color: #6d6553; }
+
+/* Sections */
+.section { margin-bottom: 28px; }
+.section-header {
+display: flex; justify-content: space-between; align-items: baseline;
+margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2621;
+}
+.section-title { font-size: 11px; letter-spacing: 0.3em; color: #c9a961; }
+.section-meta { font-size: 10px; color: #8a7a5c; font-style: italic; }
+
+/* Quests */
+.quest-list { display: flex; flex-direction: column; gap: 4px; }
+.quest-row {
+width: 100%; display: flex; align-items: center; gap: 12px;
+padding: 12px 14px; background: #17150f;
+border: 1px solid #2a2621; cursor: pointer;
+color: #d4c5a9; font-family: inherit; font-size: 14px; text-align: left;
+transition: border-color 0.15s;
+}
+.quest-check {
+width: 18px; height: 18px; border: 1.5px solid #4a4438;
+display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+transition: all 0.15s;
+}
+.quest-check svg { display: none; }
+.quest-row.done .quest-check svg { display: block; }
+.quest-label { flex: 1; font-size: 13px; line-height: 1.3; }
+.quest-row.done .quest-label { opacity: 0.7; text-decoration: line-through; }
+.quest-xp { font-size: 10px; letter-spacing: 0.1em; font-weight: 600; flex-shrink: 0; color: #6d6553; }
+.quest-icon { flex-shrink: 0; opacity: 0.65; }
+.quest-row.done .quest-icon { opacity: 1; }
+
+/* Day grid */
+.day-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-bottom: 12px; }
+.day-cell {
+aspect-ratio: 1; font-size: 10px; font-family: inherit;
+cursor: pointer; padding: 0; border: 1px solid #2a2621;
+background: #17150f; color: #8a7a5c;
+}
+.day-cell.current { border: 1.5px solid #e8d9b8; }
+.day-cell.complete { color: #0f0e0c; font-weight: 700; }
+.day-cell.partial { background: #28241e; }
+
+.legend { display: flex; gap: 14px; font-size: 9px; color: #6d6553; letter-spacing: 0.15em; text-transform: uppercase; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 7px; height: 7px; display: inline-block; }
+
+/* Pillars */
+.pillar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.pillar-card {
+background: #17150f; border: 1px solid #2a2621;
+padding: 10px 8px; display: flex; flex-direction: column;
+align-items: center; gap: 5px;
+}
+.pillar-label { font-size: 9px; letter-spacing: 0.2em; color: #a89a7f; }
+.pillar-bar { width: 100%; height: 3px; background: #2a2621; }
+.pillar-bar-fill { height: 100%; }
+.pillar-count { font-size: 11px; color: #d4c5a9; }
+
+/* Tab intros & info cards */
+.tab-intro { padding: 16px 0 20px; border-bottom: 1px solid #2a2621; margin-bottom: 24px; }
+.tab-intro-title { font-size: 14px; letter-spacing: 0.3em; color: #c9a961; margin-bottom: 10px; }
+.tab-intro-desc { font-size: 13px; color: #a89a7f; line-height: 1.6; font-style: italic; }
+.tab-intro-sub { margin-top: 10px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+.info-card {
+background: #17150f; border: 1px solid #2a2621;
+border-left: 2px solid #c9a961; padding: 12px 14px; margin-bottom: 10px;
+}
+.info-card-title { font-size: 10px; letter-spacing: 0.25em; color: #c9a961; margin-bottom: 6px; }
+.info-card-desc { font-size: 13px; color: #d4c5a9; line-height: 1.6; }
+
+/* Quest details */
+.quest-detail-card { background: #17150f; border: 1px solid #2a2621; padding: 14px 16px; margin-bottom: 10px; }
+.quest-detail-head {
+display: flex; align-items: center; gap: 8px;
+padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid;
+}
+.quest-detail-pillar { font-size: 10px; letter-spacing: 0.25em; }
+.quest-detail-title { font-size: 14px; color: #e8d9b8; margin-bottom: 8px; font-style: italic; }
+.quest-detail-desc { font-size: 12.5px; color: #a89a7f; line-height: 1.6; }
+
+.pillar-desc-card { background: #17150f; border: 1px solid #2a2621; padding: 12px 14px; margin-bottom: 10px; }
+.pillar-desc-head { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.25em; margin-bottom: 6px; }
+.pillar-desc-text { font-size: 12.5px; color: #a89a7f; line-height: 1.6; }
+
+/* Phase cards */
+.phase-card { background: #17150f; border: 1px solid #2a2621; padding: 16px 18px; margin-bottom: 14px; }
+.phase-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.phase-card-label { font-size: 10px; letter-spacing: 0.3em; }
+.phase-card-name { font-size: 20px; color: #e8d9b8; letter-spacing: 0.05em; }
+.phase-card-days { font-size: 11px; color: #8a7a5c; font-style: italic; }
+.phase-job {
+font-size: 14px; color: #e8d9b8; font-style: italic;
+padding: 10px 0; margin-bottom: 10px;
+border-top: 1px solid #2a2621; border-bottom: 1px solid #2a2621;
+}
+.phase-desc-block { font-size: 12.5px; color: #a89a7f; line-height: 1.6; margin-bottom: 4px; }
+.phase-subhead { font-size: 9px; letter-spacing: 0.3em; color: #c9a961; margin-bottom: 6px; }
+.phase-target { font-size: 12.5px; color: #d4c5a9; line-height: 1.6; margin-bottom: 3px; }
+.phase-trap-text { font-size: 12.5px; color: #a89a7f; line-height: 1.6; font-style: italic; }
+.phase-section { margin-top: 12px; }
+
+/* Training */
+.lift-day { background: #17150f; border: 1px solid #2a2621; padding: 12px 14px; margin-bottom: 8px; }
+.lift-day-head { font-size: 11px; letter-spacing: 0.25em; color: #c9a961; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #2a2621; }
+.lift-row { font-size: 13px; color: #d4c5a9; line-height: 1.8; }
+
+/* Reading weeks */
+.week-card { background: #17150f; border: 1px solid #2a2621; padding: 12px 14px; margin-bottom: 8px; }
+.week-head { font-size: 11px; letter-spacing: 0.25em; color: #6b8cae; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #2a2621; }
+.week-desc { font-size: 12.5px; color: #d4c5a9; line-height: 1.6; }
+
+/* Textarea */
+textarea {
+width: 100%; min-height: 180px;
+background: #17150f; border: 1px solid #3a3530;
+color: #d4c5a9; padding: 14px;
+font-family: inherit; font-size: 14px; line-height: 1.7;
+resize: vertical; outline: none; font-style: italic;
+}
+
+/* Footer */
+.footer { text-align: center; padding-top: 20px; border-top: 1px solid #2a2621; margin-top: 30px; }
+.footer-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.footer-btn {
+background: transparent; border: 1px solid #3a3530;
+color: #6d6553; padding: 7px 14px;
+font-family: inherit; font-size: 10px; letter-spacing: 0.25em;
+cursor: pointer; text-transform: uppercase;
+}
+.motto { margin-top: 16px; font-size: 11px; color: #4a4438; font-style: italic; }
+
+.hidden { display: none; }
+</style>
+
+</head>
+<body>
+
+<div class="save-indicator" id="saveIndicator">saved</div>
+
+<div class="root">
+
+  <div class="header">
+    <div class="crest">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line><line x1="19" y1="21" x2="21" y2="19"></line></svg>
+    </div>
+    <div class="title">The 90-Day Campaign</div>
+    <div class="subtitle">a character sheet for the rebuild</div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+
+  <div class="footer">
+    <div class="footer-btns">
+      <button class="footer-btn" onclick="exportData()">Export</button>
+      <button class="footer-btn" onclick="resetAll()">Reset Campaign</button>
+    </div>
+    <div class="motto">no zero days</div>
+  </div>
+</div>
+
+<script>
+// ============ CONFIG ============
+const TOTAL_DAYS = 90;
+const STORAGE_KEY = "rpg-tracker-v1";
+
+const PILLARS = [
+  { id: "body", label: "Body", color: "#c87941", icon: "dumbbell" },
+  { id: "mind", label: "Mind", color: "#6b8cae", icon: "book" },
+  { id: "craft", label: "Craft", color: "#9b7bb8", icon: "swords" },
+  { id: "money", label: "Coin", color: "#c9a961", icon: "coins" },
+  { id: "spirit", label: "Spirit", color: "#a87fb8", icon: "heart" },
+  { id: "kin", label: "Kin", color: "#7fa87f", icon: "users" },
+];
+
+const DAILY_QUESTS = [
+  { id: "body", label: "Train the day's block + protect recovery", pillar: "body", xp: 15 },
+  { id: "mind", label: "Read 20 min (includes speed reading drills)", pillar: "mind", xp: 10 },
+  { id: "craft", label: "Touch the craft", pillar: "craft", xp: 10 },
+  { id: "money", label: "Log the day's spending", pillar: "money", xp: 5 },
+  { id: "spirit", label: "10 min stillness + intention", pillar: "spirit", xp: 10 },
+  { id: "kin", label: "One intentional connection", pillar: "kin", xp: 10 },
+  { id: "journal", label: "5 min night journal", pillar: "spirit", xp: 5 },
+  { id: "clean", label: "No PMO — hold the line", pillar: "spirit", xp: 15 },
+];
+
+const DAILY_MAX_XP = DAILY_QUESTS.reduce((s, q) => s + q.xp, 0);
+
+const TABS = [
+  { id: "sheet", label: "Sheet" },
+  { id: "quests", label: "Quests" },
+  { id: "phases", label: "Phases" },
+  { id: "body", label: "Training" },
+  { id: "mind", label: "Reading" },
+  { id: "log", label: "Journal" },
+];
+
+function getPhase(day) {
+  if (day <= 30) return { name: "Foundation", num: 1, color: "#c9a961", desc: "Prove you can show up" };
+  if (day <= 60) return { name: "Load", num: 2, color: "#c87941", desc: "Prove you can show up under weight" };
+  return { name: "Command", num: 3, color: "#9b3a4a", desc: "Prove you can lead your own life" };
+}
+
+function getLevel(xp) { return Math.floor(xp / 100) + 1; }
+function getLevelProgress(xp) { return xp % 100; }
+
+// ============ STATE + STORAGE ============
+let state = { days: {}, currentDay: 1, notes: "", tab: "sheet" };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      state.days = p.days || {};
+      state.currentDay = p.currentDay || 1;
+      state.notes = p.notes || "";
+    }
+  } catch (e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      days: state.days, currentDay: state.currentDay, notes: state.notes
+    }));
+    showSaved();
+  } catch (e) {
+    alert("Storage error: " + e.message);
+  }
+}
+
+let saveTimer;
+function showSaved() {
+  const el = document.getElementById("saveIndicator");
+  el.classList.add("show");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => el.classList.remove("show"), 1200);
+}
+
+// ============ ICONS ============
+const ICONS = {
+  dumbbell: '<path d="m6.5 6.5 11 11"></path><path d="m21 21-1-1"></path><path d="m3 3 1 1"></path><path d="m18 22 4-4"></path><path d="m2 6 4-4"></path><path d="m3 10 7-7"></path><path d="m14 21 7-7"></path>',
+  book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>',
+  swords: '<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line><line x1="19" y1="21" x2="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" y1="14" x2="9" y2="18"></line><line x1="7" y1="17" x2="4" y2="20"></line><line x1="3" y1="19" x2="5" y2="21"></line>',
+  coins: '<circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>',
+  trending: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>',
+  check: '<polyline points="20 6 9 17 4 12"></polyline>',
+  left: '<polyline points="15 18 9 12 15 6"></polyline>',
+  right: '<polyline points="9 18 15 12 9 6"></polyline>',
+};
+
+function icon(name, size = 14, color = "currentColor", strokeWidth = 2) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+}
+
+// ============ RENDER ============
+function render() {
+  renderTabs();
+  const c = document.getElementById("content");
+  if (state.tab === "sheet") c.innerHTML = renderSheet();
+  else if (state.tab === "quests") c.innerHTML = renderQuests();
+  else if (state.tab === "phases") c.innerHTML = renderPhases();
+  else if (state.tab === "body") c.innerHTML = renderTraining();
+  else if (state.tab === "mind") c.innerHTML = renderReading();
+  else if (state.tab === "log") c.innerHTML = renderJournal();
+  attachHandlers();
+}
+
+function renderTabs() {
+  const t = document.getElementById("tabs");
+  t.innerHTML = TABS.map(tab =>
+    `<button class="tab ${state.tab === tab.id ? 'active' : ''}" data-tab="${tab.id}">${tab.label}</button>`
+  ).join("");
+  t.querySelectorAll(".tab").forEach(el => {
+    el.onclick = () => { state.tab = el.dataset.tab; render(); };
+  });
+}
+
+// Stat calculators
+function dayComplete(d) {
+  const dd = state.days[d];
+  if (!dd) return false;
+  return DAILY_QUESTS.every(q => dd[q.id]);
+}
+function dayXp(d) {
+  const dd = state.days[d];
+  if (!dd) return 0;
+  return DAILY_QUESTS.filter(q => dd[q.id]).reduce((s, q) => s + q.xp, 0);
+}
+function totalXp() {
+  let t = 0;
+  for (let d = 1; d <= TOTAL_DAYS; d++) t += dayXp(d);
+  return t;
+}
+function currentStreak() {
+  let s = 0;
+  for (let d = state.currentDay; d >= 1; d--) {
+    if (dayComplete(d)) s++; else break;
+  }
+  return s;
+}
+function cleanStreak() {
+  let s = 0;
+  for (let d = state.currentDay; d >= 1; d--) {
+    if (state.days[d]?.clean) s++; else break;
+  }
+  return s;
+}
+function questsCompleted() {
+  let t = 0;
+  for (let d = 1; d <= TOTAL_DAYS; d++) {
+    const dd = state.days[d] || {};
+    t += DAILY_QUESTS.filter(q => dd[q.id]).length;
+  }
+  return t;
+}
+
+// ============ SHEET ============
+function renderSheet() {
+  const day = state.currentDay;
+  const phase = getPhase(day);
+  const level = getLevel(totalXp());
+  const progress = getLevelProgress(totalXp());
+  const today = state.days[day] || {};
+  const xpToday = dayXp(day);
+
+  return `
+    <div class="banner">
+      <div class="level-box">
+        <div class="level-label">LVL</div>
+        <div class="level-num">${level}</div>
+      </div>
+      <div class="banner-mid">
+        <div class="phase-label" style="color:${phase.color}">PHASE ${phase.num} · ${phase.name.toUpperCase()}</div>
+        <div class="phase-desc-small">${phase.desc}</div>
+        <div class="xp-bar"><div class="xp-bar-fill" style="width:${progress}%; background:${phase.color}"></div></div>
+      </div>
+    </div>
+
+    <div class="day-nav">
+      <button class="day-nav-btn" id="prevDay" ${day === 1 ? 'disabled' : ''}>${icon('left', 16, '#c9a961')}</button>
+      <div class="day-nav-center">
+        <div class="day-nav-label">DAY</div>
+        <div class="day-nav-num">${day} <span class="day-nav-total">/ ${TOTAL_DAYS}</span></div>
+      </div>
+      <button class="day-nav-btn" id="nextDay" ${day === TOTAL_DAYS ? 'disabled' : ''}>${icon('right', 16, '#c9a961')}</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-icon" style="color:#c87941">${icon('flame', 14, '#c87941')}</div>
+        <div class="stat-value">${currentStreak()}</div>
+        <div class="stat-label">DAILY STREAK</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon" style="color:#7fa87f">${icon('shield', 14, '#7fa87f')}</div>
+        <div class="stat-value">${cleanStreak()}</div>
+        <div class="stat-label">CLEAN STREAK</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon" style="color:#c9a961">${icon('trending', 14, '#c9a961')}</div>
+        <div class="stat-value">${totalXp()}</div>
+        <div class="stat-label">TOTAL XP</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon" style="color:#6b8cae">${icon('check', 14, '#6b8cae')}</div>
+        <div class="stat-value">${questsCompleted()}</div>
+        <div class="stat-label">QUESTS DONE</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">TODAY'S QUESTS</div>
+        <div class="section-meta">${xpToday} / ${DAILY_MAX_XP} XP</div>
+      </div>
+      <div class="quest-list">
+        ${DAILY_QUESTS.map(q => {
+          const pillar = PILLARS.find(p => p.id === q.pillar);
+          const done = today[q.id];
+          return `
+            <button class="quest-row ${done ? 'done' : ''}" data-quest="${q.id}" style="${done ? `border-color:${pillar.color}66` : ''}">
+              <div class="quest-check" style="${done ? `background:${pillar.color}; border-color:${pillar.color}` : ''}">
+                ${icon('check', 12, '#0f0e0c', 3.5)}
+              </div>
+              <div class="quest-icon" style="color:${pillar.color}">${icon(pillar.icon, 14, pillar.color)}</div>
+              <div class="quest-label">${q.label}</div>
+              <div class="quest-xp" style="${done ? `color:${pillar.color}` : ''}">+${q.xp}</div>
+            </button>
+          `;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-title">CAMPAIGN MAP</div></div>
+      <div class="day-grid">
+        ${Array.from({length: TOTAL_DAYS}, (_, i) => i + 1).map(d => {
+          const complete = dayComplete(d);
+          const xp = dayXp(d);
+          const partial = xp > 0 && !complete;
+          const isCurrent = d === day;
+          const p = getPhase(d);
+          const classes = ['day-cell'];
+          if (isCurrent) classes.push('current');
+          if (complete) classes.push('complete');
+          else if (partial) classes.push('partial');
+          return `<button class="${classes.join(' ')}" data-day="${d}" style="${complete ? `background:${p.color}` : ''}" title="Day ${d} · ${xp}/${DAILY_MAX_XP} XP">${d}</button>`;
+        }).join("")}
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#c9a961"></span>Foundation</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#c87941"></span>Load</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#9b3a4a"></span>Command</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-title">TODAY'S PILLARS</div></div>
+      <div class="pillar-grid">
+        ${PILLARS.map(p => {
+          const quests = DAILY_QUESTS.filter(q => q.pillar === p.id);
+          const done = quests.filter(q => today[q.id]).length;
+          const pct = (done / quests.length) * 100;
+          return `
+            <div class="pillar-card">
+              ${icon(p.icon, 16, p.color)}
+              <div class="pillar-label">${p.label.toUpperCase()}</div>
+              <div class="pillar-bar"><div class="pillar-bar-fill" style="width:${pct}%; background:${p.color}"></div></div>
+              <div class="pillar-count">${done}/${quests.length}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// ============ QUESTS ============
+function renderQuests() {
+  const questDetails = [
+    { pillar: "body", label: "Train the day's block + protect recovery", desc: "Do what today's program calls for — no freestyling, no skipping. Protect the recovery floor: 7+ hours sleep, protein hit, water in, no training through injury signals. Missing the program isn't a rest day, it's a gap in the plan." },
+    { pillar: "mind", label: "Read 20 min (includes speed reading drills)", desc: "A real book. 20 minutes, phone in another room. Speed reading drills happen inside this block — pacer, chunking, subvocalization work. The goal isn't just pages — it's rebuilding the muscle of sustained attention." },
+    { pillar: "craft", label: "Touch the craft", desc: "One concrete action that moves content forward: script a hook, edit a clip, write out a reel idea fully, outline a breakdown. Thinking doesn't count. Output does, even tiny output. No ghost days on the craft." },
+    { pillar: "money", label: "Log the day's spending", desc: "Before bed, every dollar that left your account written down. Coffee, gas, subscriptions, everything. No judgment, no categories yet — just the log. Two minutes. Awareness before optimization." },
+    { pillar: "spirit", label: "10 min stillness + intention", desc: "Two halves. Stillness: prayer, meditation, breath, silence — your flavor. Intention: the one thing that matters today, and who you want to be while doing it. Can be split AM/PM or done together." },
+    { pillar: "kin", label: "One intentional connection", desc: "Son days: phone down, fully in the room, one real moment. Non-son days: a call, a voice note, a real conversation with someone who matters. Not 'hey' texts. Something that says I see you, I'm here." },
+    { pillar: "spirit", label: "5 min night journal", desc: "Three lines minimum: what I set out to do, what actually happened, what I'm taking into tomorrow. On urge days, add a fourth line: when it hit, what I was doing, what I was feeling. Closes the loop on the day." },
+    { pillar: "spirit", label: "No PMO — hold the line", desc: "Zero. Not moderated, not 'only weekends.' The streak is the streak, starting day 1. If broken, log it honestly in the night journal and restart day 1 the next morning. No shame spiral — just honest data and back in the fight." },
+  ];
+
+  const pillarDescs = [
+    { pillar: "body", desc: "The foundation under everything else. Not about looking good — about a body that answers when you call on it. Movement, strength, sleep, recovery, what you eat." },
+    { pillar: "mind", desc: "What you feed your brain and how you sharpen it. Reading, learning, focused thinking — and what you refuse to consume. Algorithms and shorts are mind input too, and most of it's garbage calories." },
+    { pillar: "craft", desc: "The work. Reels, scripting, editing, analysis. The pillar with the highest variance in output, but the non-negotiable is contact. Touch it daily, even when it's quiet." },
+    { pillar: "money", desc: "Awareness before optimization. Know what came in, what went out, what's left. Grows into budgeting, saving, and working toward a goal that actually matters — with a son in the picture, the stakes aren't just yours." },
+    { pillar: "spirit", desc: "Whatever practice grounds you in something bigger than the day's noise. The pillar that keeps the other five from becoming grinding self-optimization. Without it, discipline becomes a cage. With it, it becomes a path." },
+    { pillar: "kin", desc: "Relationships, with your son at the center. Not 'being present' — quality of presence. Phone down, fully in the room. Extends to family, close friends, people you'd regret losing touch with." },
+  ];
+
+  return `
+    <div class="tab-intro">
+      <div class="tab-intro-title">THE DAILY QUESTS</div>
+      <div class="tab-intro-desc">Eight things. Every day. Every day type. The stack that doesn't move no matter what life throws. Hit all eight = 80 XP and the day is complete.</div>
+    </div>
+
+    <div class="section">
+      ${questDetails.map(q => {
+        const p = PILLARS.find(x => x.id === q.pillar);
+        return `
+          <div class="quest-detail-card">
+            <div class="quest-detail-head" style="border-color:${p.color}55">
+              ${icon(p.icon, 14, p.color)}
+              <div class="quest-detail-pillar" style="color:${p.color}">${p.label.toUpperCase()}</div>
+            </div>
+            <div class="quest-detail-title">${q.label}</div>
+            <div class="quest-detail-desc">${q.desc}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-title">THE SIX PILLARS</div></div>
+      ${pillarDescs.map(p => {
+        const pillar = PILLARS.find(x => x.id === p.pillar);
+        return `
+          <div class="pillar-desc-card">
+            <div class="pillar-desc-head" style="color:${pillar.color}">
+              ${icon(pillar.icon, 14, pillar.color)}
+              <span>${pillar.label.toUpperCase()}</span>
+            </div>
+            <div class="pillar-desc-text">${p.desc}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+// ============ PHASES ============
+function renderPhases() {
+  const phases = [
+    {
+      num: 1, name: "FOUNDATION", days: "Days 1–30", color: "#c9a961",
+      job: "Become someone who doesn't negotiate with himself.",
+      desc: "Not about impressive output. About proving, day after day, that the daily stack happens. The eight non-negotiables are the entire game. Everything else is a bonus.",
+      targets: ["Content: 2 reels per week, shipped", "Body: lock in the workout program as written — no freestyling", "Mind: one book, one speed-reading drill, stay on it", "Money: logging only, no budget yet", "Spirit: install the 10-min stillness + intention block, daily"],
+      trap: "Boredom. When it hits, you're doing it right. Push through.",
+      review: "Day 30: did I hit the daily stack 25+ out of 30 days? If yes, earn Phase 2. If no, diagnose and run 15 more days of Phase 1."
+    },
+    {
+      num: 2, name: "LOAD", days: "Days 31–60", color: "#c87941",
+      job: "Raise the floor without breaking the foundation.",
+      desc: "The daily stack is on autopilot now. Add load — more output, more depth, more intentionality — without letting the floor crack. That's the actual test.",
+      targets: ["Content: 3 reels/week + one longer-form piece", "Body: progressive overload tracked, one harder session added weekly", "Mind: speed reading retest at day 30, notes system live", "Money: budget built from Phase 1 data — needs/wants/save", "Spirit: daily block stays, add one 30–45 min deeper session per week"],
+      trap: "Plateaus. Visible results lag invisible progress. Don't flinch.",
+      review: "Day 60: did load go up AND did the floor hold? Both, or it's not a pass."
+    },
+    {
+      num: 3, name: "COMMAND", days: "Days 61–90", color: "#9b3a4a",
+      job: "Stop performing discipline. Start operating from it.",
+      desc: "By now the stack isn't something you try to do. It's who you are. Phase 3 is where the identity shift becomes undeniable. You stop thinking about the discipline and start thinking about what it's for.",
+      targets: ["Content: 4 reels/week + one flagship piece", "Body: one genuinely hard session weekly — a benchmark, a PR, something that scares you", "Mind: teach what you've learned — breakdown, reel, thread", "Money: 6-month financial goal set with weekly save target", "Spirit: deepen — longer stillness, more weekly reflection", "Kin: do something meaningful for someone else"],
+      trap: "Coasting. Finish the way you started.",
+      review: "Day 90: not a review, a reckoning. Look at who you were day 1 vs now. Decide what day 91 looks like."
+    },
+  ];
+  const active = getPhase(state.currentDay);
+
+  return `
+    <div class="tab-intro">
+      <div class="tab-intro-title">THE THREE PHASES</div>
+      <div class="tab-intro-desc">Ninety days, three acts. Each phase keeps the daily stack alive but shifts focus, load, and identity.</div>
+      <div class="tab-intro-sub" style="color:${active.color}">Currently: Phase ${active.num} — ${active.name}</div>
+    </div>
+    ${phases.map(p => {
+      const isActive = p.num === active.num;
+      return `
+        <div class="phase-card" style="border-left:3px solid ${p.color}; opacity:${isActive ? 1 : 0.78}">
+          <div class="phase-card-head">
+            <div>
+              <div class="phase-card-label" style="color:${p.color}">PHASE ${p.num}</div>
+              <div class="phase-card-name">${p.name}</div>
+            </div>
+            <div class="phase-card-days">${p.days}</div>
+          </div>
+          <div class="phase-job">"${p.job}"</div>
+          <div class="phase-desc-block">${p.desc}</div>
+          <div class="phase-section">
+            <div class="phase-subhead">TARGETS</div>
+            ${p.targets.map(t => `<div class="phase-target">· ${t}</div>`).join("")}
+          </div>
+          <div class="phase-section">
+            <div class="phase-subhead">THE TRAP</div>
+            <div class="phase-trap-text">${p.trap}</div>
+          </div>
+          <div class="phase-section">
+            <div class="phase-subhead">CHECKPOINT</div>
+            <div class="phase-trap-text">${p.review}</div>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+// ============ TRAINING ============
+function renderTraining() {
+  const days = [
+    { name: "DAY 1 — UPPER (STRENGTH)", lifts: ["Barbell bench press — 4×5–6", "Weighted pull-ups (or lat pulldown) — 4×6–8", "Standing overhead press — 3×6–8", "Barbell row — 3×8", "Incline DB curl — 3×10", "Skullcrushers — 3×10", "Hanging leg raise — 3×12"] },
+    { name: "DAY 2 — LOWER (STRENGTH)", lifts: ["Back squat — 4×5–6", "Romanian deadlift — 3×8", "Walking lunges — 3×10/leg", "Leg curl — 3×12", "Standing calf raise — 4×10–12", "Plank — 3× failure"] },
+    { name: "DAY 3 — REST / CONDITIONING", lifts: ["Option A: 20–30 min zone 2 cardio", "Option B: mobility / stretch session", "Option C: full rest if beat up"] },
+    { name: "DAY 4 — PUSH (HYPERTROPHY)", lifts: ["Incline DB press — 4×8–10", "Seated DB shoulder press — 3×10", "Cable chest fly — 3×12", "Lateral raise — 4×12–15", "Tricep rope pushdown — 3×12", "Overhead cable tricep ext — 3×12"] },
+    { name: "DAY 5 — PULL (HYPERTROPHY)", lifts: ["Lat pulldown (wide) — 4×10", "Chest-supported row — 4×10", "Cable face pull — 3×15", "Rear delt fly — 3×15", "Hammer curl — 3×10", "Cable curl — 3×12"] },
+    { name: "DAY 6 — LEGS (HYPERTROPHY) · OPTIONAL", lifts: ["Bulgarian split squat — 3×10/leg", "Leg press — 4×12", "Leg extension — 3×15", "Seated leg curl — 3×15", "Seated calf raise — 4×15", "Cable crunch — 3×15"] },
+    { name: "DAY 7 — FULL REST", lifts: ["Sleep. Eat. Don't lift."] },
+  ];
+
+  return `
+    <div class="tab-intro">
+      <div class="tab-intro-title">THE TRAINING PROGRAM</div>
+      <div class="tab-intro-desc">Upper / Lower / Push / Pull / Legs split. 5 days base, 6 optional. Built for body recomp — heavy enough to preserve strength, volume enough for growth, conditioning layered in for fat loss.</div>
+    </div>
+    <div class="info-card"><div class="info-card-title">PROGRESSION</div><div class="info-card-desc">Double progression with small jumps. Hit the top of the range for all sets → add smallest weight next session (2.5–5 lb upper, 5–10 lb lower). Stall 3+ sessions → deload that lift 10%.</div></div>
+    <div class="info-card"><div class="info-card-title">EFFORT / FAILURE</div><div class="info-card-desc">Leave 1–2 reps in the tank on most sets. Save failure for the LAST set of isolation lifts (curls, lateral raises, extensions). Big compounds never go to failure — too expensive on recovery, especially in a deficit.</div></div>
+    <div class="info-card"><div class="info-card-title">DELOAD WEEKS</div><div class="info-card-desc">Week 6 and Week 12. Same exercises, same frequency, drop weights to ~60%, cut sets in half. Skipping deloads is how you end injured instead of transformed.</div></div>
+    <div class="section">
+      <div class="section-header"><div class="section-title">WEEKLY SPLIT</div></div>
+      ${days.map(d => `
+        <div class="lift-day">
+          <div class="lift-day-head">${d.name}</div>
+          ${d.lifts.map(l => `<div class="lift-row">${l}</div>`).join("")}
+        </div>
+      `).join("")}
+    </div>
+    <div class="info-card"><div class="info-card-title">CONDITIONING</div><div class="info-card-desc">Two slots per week. ONE steady-state: 30–40 min zone 2 (incline walk, bike, rower) — low recovery cost. ONE interval: 15–20 min (8 rounds, 30 sec hard / 90 sec easy). Put intervals AFTER push or pull, never before legs.</div></div>
+    <div class="info-card"><div class="info-card-title">RECOVERY FLOOR</div><div class="info-card-desc">7+ hrs sleep, protected bedtime. ~1g protein per lb goal bodyweight. Water: half bodyweight in oz minimum. 7,000+ steps daily — separate from training. This is where the recomp magic hides.</div></div>
+    <div class="info-card"><div class="info-card-title">FLEXING FOR LIFE</div><div class="info-card-desc">4 days that week? Upper/Lower/Push/Pull — drop Legs. 3 days? Upper/Lower/Push (rotate which is dropped). Missed day = sequence resumes, not stacks. Never cram 5 days into 2 to 'catch up.'</div></div>
+    <div class="info-card"><div class="info-card-title">WEEKLY METRICS</div><div class="info-card-desc">Bodyweight (same day, same time). Waist measurement. Top-set weight on bench/squat/OHP/RDL/pull-up. One progress photo. Scale may barely move during recomp — waist shrinking + lifts climbing is the real signal.</div></div>
+  `;
+}
+
+// ============ READING ============
+function renderReading() {
+  const weeks = [
+    { name: "WEEK 1 — BASELINE + PACER", desc: "Day 1: measure baseline WPM (read 5 min, count words, write 3–5 recall points). Daily drill: 5 min pointer work — use finger/pen as pacer, eyes follow, move slightly faster than comfortable. Remaining 15 min: normal reading with pointer. This week comprehension > speed." },
+    { name: "WEEK 2 — QUIET THE INNER VOICE", desc: "Daily drill: 5 min counting — softly count '1,2,3,4' under your breath while reading a re-read text. Occupies the subvocalizer. Remaining 15 min: pointer + normal reading, pace up slightly." },
+    { name: "WEEK 3 — EXPAND FIXATIONS", desc: "Daily drill: 5 min chunking — divide line into thirds mentally, train eyes to stop only 3 times per line. Easy material (fiction). Remaining 15 min: pointer + chunking. Comprehension may dip — normal. Rebounds week 4." },
+    { name: "WEEK 4 — RETEST + CONSOLIDATE", desc: "Day 30: retest WPM. Aiming for meaningful jump (250 → 300–400 range). Comprehension check: 3–5 recall points. No new drill this week — just practice pointer + chunking, push speed slightly each session." },
+    { name: "WEEKS 5–8 — LOAD", desc: "4 days: normal reading with full technique, push speed. 2 days: comprehension days — slow reading, take notes. Some material (philosophy, scripture, technical) deserves slow. 1 day: push day on easy material, stretch the ceiling. New drill 2–3×/wk (3 min): peripheral expansion. Retest at day 60." },
+    { name: "WEEKS 9–12 — COMMAND", desc: "Drills fade into the background. Pointer becomes automatic (or optional). Focus shifts to RETENTION — notes system becomes central. Reading fast without retention is pointless. Final retest day 90: WPM + comprehension + list of what you read across all 90 days." },
+  ];
+
+  return `
+    <div class="tab-intro">
+      <div class="tab-intro-title">THE READING PROGRAM</div>
+      <div class="tab-intro-desc">Doubling your baseline while holding 70%+ comprehension. Drills fit inside the 20-min daily read — no extra time. Built on fixing three habits: regression, subvocalization, and fixation count.</div>
+    </div>
+    <div class="info-card"><div class="info-card-title">BASELINE MATTERS</div><div class="info-card-desc">Before drilling anything: read 5 min of new material at normal pace. Words per line × lines read ÷ 5 = baseline WPM. Write 3–5 things you remember. You can't improve what you don't measure.</div></div>
+    <div class="info-card"><div class="info-card-title">THREE RETESTS</div><div class="info-card-desc">Day 30, Day 60, Day 90. Same method every time. WPM climbs, comprehension holds — that's the pass condition. WPM climbs, comprehension tanks — slow down, you pushed too fast.</div></div>
+    <div class="section">
+      <div class="section-header"><div class="section-title">PROGRAM BY WEEK</div></div>
+      ${weeks.map(w => `
+        <div class="week-card">
+          <div class="week-head">${w.name}</div>
+          <div class="week-desc">${w.desc}</div>
+        </div>
+      `).join("")}
+    </div>
+    <div class="info-card"><div class="info-card-title">BOOK STACK</div><div class="info-card-desc">Rotate three at once. CURRENT: the main book, daily. EASY: for push days and low-energy weeks (a novel). SLOW: dense or meaningful text for comprehension days (philosophy, scripture).</div></div>
+    <div class="info-card"><div class="info-card-title">COMMON TRAPS</div><div class="info-card-desc">Pushing speed at cost of comprehension (you're not reading, you're skimming). Trying to speed-read everything (some books deserve slow). Skipping drills when it feels 'fine' in week 3 (that's how gains stall). Phone in reach (kills the whole thing).</div></div>
+  `;
+}
+
+// ============ JOURNAL ============
+function renderJournal() {
+  const completedDays = Object.keys(state.days).filter(d => {
+    const dd = state.days[d];
+    return DAILY_QUESTS.every(q => dd[q.id]);
+  }).length;
+
+  return `
+    <div class="tab-intro">
+      <div class="tab-intro-title">THE SCRIBE'S LEDGER</div>
+      <div class="tab-intro-desc">The weekly review and the night journal live here. Three lines per night. Sunday: five questions. Write the answers — don't think them.</div>
+    </div>
+    <div class="info-card"><div class="info-card-title">NIGHT JOURNAL (5 MIN)</div><div class="info-card-desc">Three lines minimum. What I set out to do. What actually happened. What I'm taking into tomorrow. On urge days (PMO), add a fourth: when it hit, what I was doing, what I was feeling. Pattern emerges by week 3.</div></div>
+    <div class="info-card"><div class="info-card-title">SUNDAY REVIEW (20 MIN)</div><div class="info-card-desc">1. Which non-negotiables did I miss, and why? 2. What content went out — what landed, what didn't? 3. Where did money go unplanned? 4. What did I read or learn worth keeping? 5. What's the ONE thing I'm sharpening next week?</div></div>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">LEDGER</div>
+        <div class="section-meta">${completedDays} complete days</div>
+      </div>
+      <textarea id="journal" placeholder="tonight's three lines, or this week's five answers...">${state.notes.replace(/</g, '&lt;')}</textarea>
+
+```
+</div>
+```
+
+`;
+}
+
+// ============ HANDLERS ============
+function attachHandlers() {
+// Quest toggles
+document.querySelectorAll(”.quest-row”).forEach(el => {
+el.onclick = () => {
+const questId = el.dataset.quest;
+if (!state.days[state.currentDay]) state.days[state.currentDay] = {};
+state.days[state.currentDay][questId] = !state.days[state.currentDay][questId];
+saveState();
+render();
+};
+});
+
+// Day navigation
+const prev = document.getElementById(“prevDay”);
+if (prev) prev.onclick = () => {
+if (state.currentDay > 1) { state.currentDay–; saveState(); render(); }
+};
+const next = document.getElementById(“nextDay”);
+if (next) next.onclick = () => {
+if (state.currentDay < TOTAL_DAYS) { state.currentDay++; saveState(); render(); }
+};
+
+// Day grid jump
+document.querySelectorAll(”.day-cell”).forEach(el => {
+el.onclick = () => {
+state.currentDay = parseInt(el.dataset.day);
+saveState();
+render();
+};
+});
+
+// Journal textarea
+const journal = document.getElementById(“journal”);
+if (journal) {
+let timer;
+journal.oninput = (e) => {
+state.notes = e.target.value;
+clearTimeout(timer);
+timer = setTimeout(() => saveState(), 400);
+};
+}
+}
+
+// ============ ACTIONS ============
+function exportData() {
+const dump = JSON.stringify({
+days: state.days,
+currentDay: state.currentDay,
+notes: state.notes,
+exportedAt: new Date().toISOString(),
+}, null, 2);
+
+try {
+navigator.clipboard.writeText(dump);
+alert(“Campaign data copied to clipboard. Paste it somewhere safe as backup.”);
+} catch (e) {
+prompt(“Copy this text as your backup:”, dump);
+}
+}
+
+function resetAll() {
+if (!confirm(“Reset all progress? Cannot be undone.”)) return;
+state = { days: {}, currentDay: 1, notes: “”, tab: “sheet” };
+try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+render();
+}
+
+// ============ BOOT ============
+loadState();
+render();
+</script>
+
+</body>
+</html>
